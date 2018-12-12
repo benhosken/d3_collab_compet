@@ -13,14 +13,14 @@ import torch.optim as optim
 BUFFER_SIZE = int(1e6)  # replay buffer size
 BATCH_SIZE = 128        # minibatch size
 GAMMA = 0.99            # discount factor
-TAU = 1e-3              # for soft update of target parameters
+#TAU = 1e-3              # for soft update of target parameters
+TAU = 1e-1 
 LR_ACTOR = 1e-4         # learning rate of the actor 
 LR_CRITIC = 3e-4        # learning rate of the critic
-WEIGHT_DECAY = 0.0001   # L2 weight decay
+WEIGHT_DECAY = 0.0000   # L2 weight decay
 
 
-UPDATE_EVERY = 1       # timesteps between updates
-NUM_UPDATES = 1        # update the agent multiple times sample
+NUM_UPDATES = 4        # update the agent multiple times sample
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -61,19 +61,12 @@ class Agent():
         for target_param, param in zip(target.parameters(), source.parameters()):
             target_param.data.copy_(param.data)
         
-    def step(self, state, action, reward, next_state, done, timestep):
+    def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
         # Save experience / reward
         self.memory.add(state, action, reward, next_state, done)
 
-        # Learn, if enough samples are available in memory
-        if len(self.memory) > BATCH_SIZE and timestep % UPDATE_EVERY == 0:
-            # As we are updating every UPDATE_EVERY steps
-            # we should also try applying the expeirences multiple times
-            for i in range(NUM_UPDATES):
-                experiences = self.memory.sample()
-                self.learn(experiences, GAMMA)
-
+                
     def act(self, state, add_noise=True):
         """Returns actions for given state as per current policy."""
         state = torch.from_numpy(state).float().to(device)
@@ -88,6 +81,17 @@ class Agent():
     def reset(self):
         self.noise.reset()
 
+    def do_learning(self):
+
+        # Learn, if enough samples are available in memory
+        if len(self.memory) > BATCH_SIZE:
+            # As we are updating every UPDATE_EVERY steps
+            # we should also try applying the expeirences multiple times
+            for i in range(NUM_UPDATES):
+                experiences = self.memory.sample()
+                self.learn(experiences, GAMMA)
+                        
+        
     def learn(self, experiences, gamma):
         """Update policy and value parameters using given batch of experience tuples.
         Q_targets = r + γ * critic_target(next_state, actor_target(next_state))
@@ -107,6 +111,7 @@ class Agent():
         actions_next = self.actor_target(next_states)
         Q_targets_next = self.critic_target(next_states, actions_next)
         # Compute Q targets for current states (y_i)
+        
         Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
         # Compute critic loss
         Q_expected = self.critic_local(states, actions)
