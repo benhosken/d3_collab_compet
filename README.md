@@ -7,7 +7,7 @@
 
 ### Introduction
 
-This project is Ben Hosken's submission to for the Deep RL Nanodegree project 3. The environment was solved in 290 episodes.
+This project is Ben Hosken's submission to for the Deep RL Nanodegree project 3. The environment was solved in 290 episodes using the DDPG algorithm with a a single agent model being trained with both players.
 
 ![Trained Agent][image1]
 
